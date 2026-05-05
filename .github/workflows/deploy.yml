@@ -1,0 +1,16 @@
+name: CI/CD Placeholder
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Placeholder step
+        run: echo "CI/CD pipeline skeleton - Week 10"
