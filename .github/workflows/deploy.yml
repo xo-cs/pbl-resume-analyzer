@@ -18,8 +18,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install dependencies into antenv
+        run: |
+          python -m venv antenv
+          source antenv/bin/activate
+          pip install -r requirements.txt
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v2
