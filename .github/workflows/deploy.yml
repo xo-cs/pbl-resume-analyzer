@@ -1,4 +1,4 @@
-name: CI/CD Placeholder
+name: Deploy to Azure App Service
 
 on:
   push:
@@ -6,11 +6,23 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Placeholder step
-        run: echo "CI/CD pipeline skeleton - Week 10"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: pbl-resume-api
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
