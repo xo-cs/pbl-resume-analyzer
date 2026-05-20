@@ -5,3 +5,4 @@ azure-ai-documentintelligence
 openai
 python-multipart
 aiofiles
+gunicorn
