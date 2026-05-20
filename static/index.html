@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            padding: 40px 20px;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 0.95rem;
+        }
+        .upload-box {
+            background: #1e293b;
+            border: 2px dashed #334155;
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+        .upload-box:hover { border-color: #60a5fa; }
+        .upload-box input { display: none; }
+        .upload-icon { font-size: 3rem; margin-bottom: 16px; }
+        .upload-box p { color: #94a3b8; margin-bottom: 16px; }
+        .file-name { color: #60a5fa; font-weight: 600; margin-top: 10px; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #3b82f6, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #334155;
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .results { display: none; margin-top: 30px; }
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid #334155;
+        }
+        .card h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #60a5fa;
+            margin-bottom: 12px;
+        }
+        .ats-score {
+            font-size: 4rem;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(90deg, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .ats-label { text-align: center; color: #94a3b8; font-size: 0.85rem; }
+        .tag {
+            display: inline-block;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            margin: 4px;
+            color: #cbd5e1;
+        }
+        .error {
+            background: #450a0a;
+            border: 1px solid #991b1b;
+            color: #fca5a5;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>AI Resume Analyzer</h1>
+    <p class="subtitle">Upload your résumé and get instant AI-powered feedback</p>
+
+    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📄</div>
+        <p>Click to upload your résumé (PDF)</p>
+        <input type="file" id="fileInput" accept=".pdf" onchange="handleFile(this)">
+        <div class="file-name" id="fileName"></div>
+    </div>
+
+    <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Analyze My Resume</button>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Analyzing your resume with Azure AI...</p>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="results" id="results">
+        <div class="card">
+            <div class="ats-score" id="atsScore">--</div>
+            <div class="ats-label">ATS Compatibility Score</div>
+        </div>
+        <div class="card">
+            <h3>Professional Summary</h3>
+            <p id="summary" style="line-height:1.6; color:#cbd5e1;"></p>
+        </div>
+        <div class="card">
+            <h3>Skill Gaps</h3>
+            <div id="skillGaps"></div>
+        </div>
+        <div class="card">
+            <h3>Role Recommendations</h3>
+            <div id="roles"></div>
+        </div>
+        <div class="card">
+            <h3>Improvement Suggestions</h3>
+            <ul id="suggestions" style="padding-left:20px; color:#cbd5e1; line-height:2;"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedFile = null;
+
+    function handleFile(input) {
+        selectedFile = input.files[0];
+        if (selectedFile) {
+            document.getElementById('fileName').textContent = selectedFile.name;
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+    }
+
+    async function analyze() {
+        if (!selectedFile) return;
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('analyzeBtn').disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Analysis failed. Please try again.');
+
+            const data = await response.json();
+            const f = data.feedback;
+
+            document.getElementById('atsScore').textContent = f.ats_score;
+            document.getElementById('summary').textContent = f.professional_summary;
+
+            document.getElementById('skillGaps').innerHTML =
+                f.skill_gaps.map(s => `<span class="tag">${s}</span>`).join('');
+
+            document.getElementById('roles').innerHTML =
+                f.role_recommendations.map(r => `<span class="tag">${r}</span>`).join('');
+
+            document.getElementById('suggestions').innerHTML =
+                f.improvement_suggestions.map(s => `<li>${s}</li>`).join('');
+
+            document.getElementById('results').style.display = 'block';
+
+        } catch (err) {
+            document.getElementById('error').textContent = err.message;
+            document.getElementById('error').style.display = 'block';
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

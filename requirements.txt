@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+azure-storage-blob
+azure-ai-documentintelligence
+openai
+python-multipart
+aiofiles
