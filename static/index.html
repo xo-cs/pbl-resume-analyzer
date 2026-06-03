@@ -17,7 +17,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 24px 120px}
 header{padding-top:80px;padding-bottom:60px}
 .hdr-tag{font-size:.7rem;color:var(--green);letter-spacing:.18em;margin-bottom:20px}
-h1{font-size:clamp(2.8rem,8vw,5rem);font-weight:700;line-height:.95;letter-spacing:-.02em;margin-bottom:20px}
+h1{font-size:clamp(1.7rem,8vw,5rem);font-weight:700;line-height:.95;letter-spacing:-.02em;margin-bottom:20px}
 .hdr-sub{font-size:.72rem;color:var(--fg2);letter-spacing:.1em;line-height:1.8}
 .sec-label{font-size:.65rem;color:var(--fg3);letter-spacing:.14em;margin-bottom:14px}
 .upload-zone{border:1px solid var(--border);background:var(--card);padding:40px 28px;cursor:pointer;position:relative;transition:border-color .2s;margin-bottom:14px}
@@ -119,6 +119,53 @@ h1{font-size:clamp(2.8rem,8vw,5rem);font-weight:700;line-height:.95;letter-spaci
 .linkedin-btn{display:inline-block;margin-top:14px;font-size:.68rem;letter-spacing:.1em;color:var(--fg2);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:2px;transition:color .2s,border-color .2s}
 .linkedin-btn:hover{color:var(--fg);border-color:rgba(255,255,255,.4)}
 footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text-align:center}
+
+/* ── Mobile responsive ──────────────────────────────────────── */
+@media(max-width:768px){
+  #terrain{opacity:.45}          /* tone down terrain on small screens */
+  .wrap{padding:0 16px 60px}
+  header{padding-top:24px;padding-bottom:28px}
+  .hdr-tag{font-size:.6rem;letter-spacing:.1em;margin-bottom:12px}
+  h1{line-height:1;margin-bottom:14px}
+  .hdr-sub{font-size:.58rem;letter-spacing:.06em;line-height:1.7}
+  .hdr-sub br{display:none}       /* one line on mobile */
+  .sec-label{font-size:.58rem;margin-bottom:10px}
+  .upload-zone{padding:24px 16px;margin-bottom:10px}
+  .upload-icon{font-size:1.2rem;margin-bottom:10px}
+  .upload-main{font-size:.72rem}
+  .upload-cap{font-size:.6rem}
+  .analyze-btn{padding:18px;font-size:.78rem;letter-spacing:.1em}
+  .t-line{font-size:.62rem;gap:6px;padding:9px 10px}
+  .t-lbl{font-size:.6rem}
+  .t-dots{display:none}           /* hide filler dots on mobile */
+  .score-block{padding:28px 16px}
+  .score-num{font-size:clamp(3.5rem,20vw,5rem)}
+  .score-pre{font-size:.58rem;margin-bottom:8px}
+  .score-tier{font-size:.65rem}
+  .card{padding:16px 14px;margin-bottom:6px}
+  .card-lbl{font-size:.58rem;margin-bottom:10px;padding-bottom:8px}
+  .card-body{font-size:.78rem}
+  .tag{font-size:.62rem;padding:4px 10px}
+  .sug-list li{font-size:.75rem;padding:8px 0}
+  .actions-row{flex-direction:column;gap:8px}
+  .btn-outline,.btn-dl{padding:14px;font-size:.7rem}
+  .agent-hdr{flex-direction:column;gap:3px}
+  .agent-lbl{font-size:.65rem}
+  .agent-sub{font-size:.58rem}
+  .role-btns{gap:6px}
+  .role-btn{padding:10px 12px;font-size:.62rem;letter-spacing:.05em}
+  .job-card{padding:14px 12px;margin-bottom:6px}
+  .job-title{font-size:.82rem}
+  .job-co{font-size:.7rem}
+  .job-meta{font-size:.6rem;margin-bottom:10px}
+  .job-btns{gap:6px}
+  .jb-view,.jb-cl{font-size:.6rem;padding:9px 12px}
+  .cl-panel{padding:12px 12px}
+  .cl-text{font-size:.72rem}
+  .cl-copy{padding:10px 14px;font-size:.6rem}
+  #jobLoader{font-size:.65rem;padding:14px 0}
+  footer{margin-top:48px;font-size:.55rem}
+}
   </style>
 </head>
 <body>
@@ -193,22 +240,33 @@ footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text
   const COLS=55,ROWS=28;
   const MAG_R=160, MAG_F=72; // repulsion radius (px) and max force (px)
 
+  // ── Pointer: mouse (desktop) + touch (mobile) ────────────────
   window.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY});
   window.addEventListener('mouseleave',()=>{mouseX=-9999;mouseY=-9999});
+  window.addEventListener('touchmove',e=>{
+    const tc=e.touches[0];mouseX=tc.clientX;mouseY=tc.clientY;
+  },{passive:true});
+  window.addEventListener('touchend',()=>{mouseX=-9999;mouseY=-9999});
 
   const TEXTS=[
     'x: 0.42','y: 0.87','X: 127','Y: 384','(0.31, 0.69)','(x,y)=(0.5,0.3)',
-    'X: −0.12','Y: 1.047','z: 0.003','x=0','y=0','z=1',
-    '3.14159','1.61803','0.99723','2.71828','127','42','∞','0.001',
+    'X: −0.12','Y: 1.047','z: 0.003','x=0','y=0','z=1','w: 0.99',
+    'lat: 36.35','lng: 127.38','alt: 72m','bearing: 214°',
+    '3.14159','1.61803','0.99723','2.71828','127','42','∞','0.001','1.4142',
     'x²+y²=r²','∇f(x,y)','σ=0.12','μ=84','n=842','p<0.001',
     'r²=0.94','Δx=0.01','∂f/∂x','f(x)→0','lim x→∞',
+    '∫f(x)dx','∑xᵢ','√2','≈0.577','∈ℝ','∅→{x}',
     '01001011','0xA4F2','0b1101','0xFF88','10110100','0x00FF',
-    'ATS_V2','NLP_PROC','CV_PARSE','BERT_EMB','PROC:94%',
+    '0xDEAD','0xBEEF','0xFF00','11001100','0xC0DE',
+    'ATS_V2','NLP_PROC','CV_PARSE','BERT_EMB','PROC:94%','GPU:0',
+    'CUDA','LSTM','CNN','GAN','SGD','ReLU','softmax','dropout',
     'VCC','GND','CLK','TX','RX','RST','PWM','ADC',
-    'IC1','U2','R47','C12','Q3','L1',
+    'SPI','I2C','UART','GPIO','CS_N','MISO','MOSI',
+    'IC1','U2','R47','C12','Q3','L1','D4','SW2',
+    'epoch:12','loss:0.04','acc:97%','lr:1e-4','batch:32',
   ];
-  const SHAPE_TYPES=['circle','triangle','rect','hexagon','diamond','cross','via','pcb_trace','pcb_ic','ring'];
-  const N=28;
+  const SHAPE_TYPES=['circle','triangle','rect','hexagon','diamond','cross','via','pcb_trace','pcb_ic','ring','octagon','target','corner','arc_seg'];
+  const N=window.innerWidth<768?55:75;
   const fl=Array.from({length:N},()=>mkF(true));
 
   function mkF(init){
@@ -291,14 +349,26 @@ footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text
           ctx.beginPath();ctx.moveTo(s,py);ctx.lineTo(s+6,py);ctx.stroke();
         }
         ctx.beginPath();ctx.arc(-s+4,-s*.6+4,3,0,Math.PI*2);ctx.stroke();break;
+      case 'octagon':
+        ctx.beginPath();
+        for(let i=0;i<8;i++){const a=i*Math.PI/4;i?ctx.lineTo(s*Math.cos(a),s*Math.sin(a)):ctx.moveTo(s*Math.cos(a),s*Math.sin(a))}
+        ctx.closePath();ctx.stroke();break;
+      case 'target':
+        [1,.55,.22].forEach(r=>{ctx.beginPath();ctx.arc(0,0,s*r,0,Math.PI*2);ctx.stroke();});break;
+      case 'corner':
+        ctx.beginPath();ctx.moveTo(-s,-s);ctx.lineTo(-s,0);ctx.lineTo(0,0);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(s,s);ctx.lineTo(s,0);ctx.lineTo(0,0);ctx.stroke();break;
+      case 'arc_seg':
+        ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*1.3);ctx.stroke();
+        ctx.beginPath();ctx.arc(0,0,s*.55,Math.PI*.2,Math.PI*1.1);ctx.stroke();break;
     }
     ctx.restore();
   }
 
   function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
 
-  function gh(c,r,t){
-    const nx=(c/COLS-.5)*3,ny=(r/ROWS-.55)*2;
+  function gh(c,r,t,cols,rows){
+    const nx=(c/cols-.5)*3,ny=(r/rows-.55)*2;
     const dist=Math.sqrt(nx*nx*.7+ny*ny*1.3);
     const peak=Math.exp(-dist*dist*.75)*2.0;
     return peak+Math.sin(c*.38+t*.85)*Math.cos(r*.3+t*.55)*.28+Math.sin(c*.14+r*.1+t*.42)*.14;
@@ -306,13 +376,16 @@ footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text
 
   function draw(){
     ctx.clearRect(0,0,W,H);
-    const cw=W/COLS,rh=H/(ROWS*1.6),by=H*.72;
+    const isMob=W<768;
+    const cols=isMob?22:COLS, rows=isMob?11:ROWS;
+    const terrH=isMob?.16:.28;   // terrain height as fraction of screen
+    const cw=W/cols,rh=H/(rows*1.6),by=H*.72;
 
-    for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
-      const h=gh(c,r,t),px=Math.max(0,Math.min(1,(h-.05)/1.8));
-      let x=c*cw, y=by+(r-ROWS*.5)*rh-h*H*.28;
+    for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+      const h=gh(c,r,t,cols,rows),px=Math.max(0,Math.min(1,(h-.05)/1.8));
+      let x=c*cw, y=by+(r-rows*.5)*rh-h*H*terrH;
 
-      // ── Mouse repulsion ──────────────────────────────────────
+      // ── Pointer repulsion (mouse or touch) ───────────────────
       const dx=x-mouseX, dy=y-mouseY;
       const d=Math.sqrt(dx*dx+dy*dy);
       if(d<MAG_R&&d>0){
