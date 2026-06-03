@@ -1,229 +1,674 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Analyzer</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 700px;
-            padding: 40px 20px;
-        }
-        h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 40px;
-            font-size: 0.95rem;
-        }
-        .upload-box {
-            background: #1e293b;
-            border: 2px dashed #334155;
-            border-radius: 16px;
-            padding: 50px 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s;
-            margin-bottom: 20px;
-        }
-        .upload-box:hover { border-color: #60a5fa; }
-        .upload-box input { display: none; }
-        .upload-icon { font-size: 3rem; margin-bottom: 16px; }
-        .upload-box p { color: #94a3b8; margin-bottom: 16px; }
-        .file-name { color: #60a5fa; font-weight: 600; margin-top: 10px; }
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(90deg, #3b82f6, #7c3aed);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .btn:hover { opacity: 0.9; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 30px;
-            color: #94a3b8;
-        }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid #334155;
-            border-top-color: #60a5fa;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .results { display: none; margin-top: 30px; }
-        .card {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
-            border: 1px solid #334155;
-        }
-        .card h3 {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #60a5fa;
-            margin-bottom: 12px;
-        }
-        .ats-score {
-            font-size: 4rem;
-            font-weight: 800;
-            text-align: center;
-            background: linear-gradient(90deg, #34d399, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .ats-label { text-align: center; color: #94a3b8; font-size: 0.85rem; }
-        .tag {
-            display: inline-block;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 0.85rem;
-            margin: 4px;
-            color: #cbd5e1;
-        }
-        .error {
-            background: #450a0a;
-            border: 1px solid #991b1b;
-            color: #fca5a5;
-            padding: 16px;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Resume Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Tokens ────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:        #080e1a;
+      --surface:   #111827;
+      --surface2:  #1c2533;
+      --border:    #1f2d42;
+      --blue:      #3b82f6;
+      --blue-dim:  #1d4ed8;
+      --purple:    #7c3aed;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --green:     #10b981;
+      --amber:     #f59e0b;
+      --red:       #ef4444;
+      --radius:    14px;
+      --font:      'DM Sans', sans-serif;
+      --mono:      'DM Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px 80px;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────────────── */
+    .wrap { width: 100%; max-width: 680px; }
+
+    /* ── Header ────────────────────────────────────────────────────────────── */
+    header { text-align: center; margin-bottom: 44px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: #93c5fd;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 60%, #f0abfc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* ── Upload zone ───────────────────────────────────────────────────────── */
+    #dropZone {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 52px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    #dropZone.drag-over {
+      border-color: var(--blue);
+      background: rgba(59,130,246,0.06);
+    }
+    #dropZone input { display: none; }
+
+    .upload-icon {
+      font-size: 2.6rem;
+      margin-bottom: 14px;
+      line-height: 1;
+      display: block;
+    }
+    .upload-hint { color: var(--muted); font-size: 0.9rem; }
+    .upload-hint span { color: var(--blue); font-weight: 600; }
+    .upload-cap { font-size: 0.78rem; color: var(--muted); margin-top: 8px; opacity: 0.7; }
+
+    #fileChosen {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      background: rgba(59,130,246,0.1);
+      border-radius: 8px;
+      padding: 10px 16px;
+    }
+    #fileChosen .fname {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: #93c5fd;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 300px;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .remove-btn:hover { color: var(--red); }
+
+    /* ── Analyze button ────────────────────────────────────────────────────── */
+    #analyzeBtn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(90deg, var(--blue-dim), var(--purple));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    #analyzeBtn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+    #analyzeBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── Loader ────────────────────────────────────────────────────────────── */
+    #loader { display: none; margin-top: 32px; }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      opacity: 0.4;
+      transition: opacity 0.3s;
+    }
+    .step.active  { opacity: 1; border-color: rgba(59,130,246,0.4); }
+    .step.done    { opacity: 0.7; }
+
+    .step-icon {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+      background: var(--surface2);
+    }
+    .step.active .step-icon { background: rgba(59,130,246,0.15); }
+    .step.done   .step-icon { background: rgba(16,185,129,0.15); }
+
+    .step-spin {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .step-label { font-size: 0.9rem; font-weight: 500; }
+    .step-desc  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Error ─────────────────────────────────────────────────────────────── */
+    #errorBox {
+      display: none;
+      margin-top: 20px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .err-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .err-msg  { color: #fca5a5; font-size: 0.9rem; line-height: 1.5; }
+    .err-retry {
+      margin-top: 10px;
+      font-size: 0.83rem;
+      color: var(--blue);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      padding: 0;
+      font-weight: 600;
+    }
+    .err-retry:hover { text-decoration: underline; }
+
+    /* ── Results ───────────────────────────────────────────────────────────── */
+    #results { display: none; margin-top: 32px; animation: fadeUp 0.4s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+    /* ATS Score card */
+    .score-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .score-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .score-ring {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .score-num {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+      font-family: var(--mono);
+    }
+    .score-ring.great  { background: conic-gradient(var(--green)  calc(var(--pct) * 1%), var(--surface2) 0); }
+    .score-ring.good   { background: conic-gradient(var(--blue)   calc(var(--pct) * 1%), var(--surface2) 0); }
+    .score-ring.fair   { background: conic-gradient(var(--amber)  calc(var(--pct) * 1%), var(--surface2) 0); }
+    .score-ring.poor   { background: conic-gradient(var(--red)    calc(var(--pct) * 1%), var(--surface2) 0); }
+
+    .score-inner {
+      width: 84px; height: 84px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .score-label.great { color: var(--green); }
+    .score-label.good  { color: var(--blue);  }
+    .score-label.fair  { color: var(--amber); }
+    .score-label.poor  { color: var(--red);   }
+
+    .score-caption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; }
+
+    /* Content cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 22px 22px;
+      margin-bottom: 14px;
+    }
+    .card-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue);
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-label::before {
+      content: '';
+      display: block;
+      width: 3px; height: 14px;
+      background: var(--blue);
+      border-radius: 2px;
+    }
+
+    .summary-text {
+      color: #cbd5e1;
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 5px 13px;
+      font-size: 0.83rem;
+      color: #cbd5e1;
+    }
+
+    .suggestions { list-style: none; }
+    .suggestions li {
+      display: flex;
+      gap: 10px;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(31,45,66,0.7);
+    }
+    .suggestions li:last-child { border-bottom: none; padding-bottom: 0; }
+    .suggestions li::before {
+      content: '→';
+      color: var(--blue);
+      flex-shrink: 0;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    /* ── Actions ───────────────────────────────────────────────────────────── */
+    .actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-ghost {
+      flex: 1;
+      padding: 12px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--blue); }
+
+    /* ── Footer ────────────────────────────────────────────────────────────── */
+    footer {
+      margin-top: 60px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      opacity: 0.5;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">Powered by Azure AI</div>
     <h1>AI Resume Analyzer</h1>
-    <p class="subtitle">Upload your résumé and get instant AI-powered feedback</p>
+    <p class="sub">Upload your résumé and receive instant feedback:<br>ATS score, skill gaps, and role matches.</p>
+  </header>
 
-    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-        <div class="upload-icon">📄</div>
-        <p>Click to upload your résumé (PDF)</p>
-        <input type="file" id="fileInput" accept=".pdf" onchange="handleFile(this)">
-        <div class="file-name" id="fileName"></div>
+  <!-- Upload zone -->
+  <div id="dropZone"
+       ondragover="onDragOver(event)"
+       ondragleave="onDragLeave(event)"
+       ondrop="onDrop(event)"
+       onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".pdf" onchange="handleFile(this)" />
+    <span class="upload-icon">📄</span>
+    <p class="upload-hint"><span>Click to upload</span> or drag & drop your résumé</p>
+    <p class="upload-cap">PDF only · Max 10 MB</p>
+    <div id="fileChosen">
+      <span class="fname" id="fName"></span>
+      <button class="remove-btn" onclick="clearFile(event)" title="Remove file">✕</button>
+    </div>
+  </div>
+
+  <button id="analyzeBtn" onclick="analyze()" disabled>Analyze My Resume</button>
+
+  <!-- Step-by-step loader -->
+  <div id="loader">
+    <div class="steps">
+      <div class="step" id="step1">
+        <div class="step-icon" id="s1icon">☁️</div>
+        <div>
+          <div class="step-label">Uploading to Azure Blob Storage</div>
+          <div class="step-desc">Storing your résumé securely in the cloud</div>
+        </div>
+      </div>
+      <div class="step" id="step2">
+        <div class="step-icon" id="s2icon">🔍</div>
+        <div>
+          <div class="step-label">Extracting text via Document Intelligence</div>
+          <div class="step-desc">Azure OCR is reading your résumé content</div>
+        </div>
+      </div>
+      <div class="step" id="step3">
+        <div class="step-icon" id="s3icon">🤖</div>
+        <div>
+          <div class="step-label">Analyzing with Azure OpenAI GPT-4o</div>
+          <div class="step-desc">Generating your ATS score and feedback</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error box -->
+  <div id="errorBox" style="display:none; margin-top:20px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:16px 18px;">
+    <div style="display:flex; align-items:flex-start; gap:12px;">
+      <span style="font-size:1.1rem; flex-shrink:0; margin-top:1px;">⚠️</span>
+      <div>
+        <div class="err-msg" id="errMsg" style="color:#fca5a5; font-size:0.9rem; line-height:1.5;"></div>
+        <button class="err-retry" onclick="reset()" style="margin-top:10px; font-size:0.83rem; color:var(--blue); background:none; border:none; cursor:pointer; font-family:var(--font); padding:0; font-weight:600;">← Try again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- ATS Score -->
+    <div class="score-card">
+      <div class="score-ring" id="scoreRing">
+        <div class="score-inner">
+          <span class="score-num" id="scoreNum">--</span>
+        </div>
+      </div>
+      <div class="score-label" id="scoreLbl">ATS Score</div>
+      <div class="score-caption">ATS Compatibility Score</div>
     </div>
 
-    <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Analyze My Resume</button>
-
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <p>Analyzing your resume with Azure AI...</p>
+    <!-- Professional Summary -->
+    <div class="card">
+      <div class="card-label">Professional Summary</div>
+      <p class="summary-text" id="summary"></p>
     </div>
 
-    <div class="error" id="error"></div>
-
-    <div class="results" id="results">
-        <div class="card">
-            <div class="ats-score" id="atsScore">--</div>
-            <div class="ats-label">ATS Compatibility Score</div>
-        </div>
-        <div class="card">
-            <h3>Professional Summary</h3>
-            <p id="summary" style="line-height:1.6; color:#cbd5e1;"></p>
-        </div>
-        <div class="card">
-            <h3>Skill Gaps</h3>
-            <div id="skillGaps"></div>
-        </div>
-        <div class="card">
-            <h3>Role Recommendations</h3>
-            <div id="roles"></div>
-        </div>
-        <div class="card">
-            <h3>Improvement Suggestions</h3>
-            <ul id="suggestions" style="padding-left:20px; color:#cbd5e1; line-height:2;"></ul>
-        </div>
+    <!-- Skill Gaps -->
+    <div class="card">
+      <div class="card-label">Skill Gaps</div>
+      <div class="tags" id="skillGaps"></div>
     </div>
+
+    <!-- Role Recommendations -->
+    <div class="card">
+      <div class="card-label">Role Recommendations</div>
+      <div class="tags" id="roles"></div>
+    </div>
+
+    <!-- Improvement Suggestions -->
+    <div class="card">
+      <div class="card-label">Improvement Suggestions</div>
+      <ul class="suggestions" id="suggestions"></ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-ghost" onclick="reset()">⟳ Analyze Another Resume</button>
+    </div>
+  </div>
+
 </div>
 
+<footer>AI Resume Analyzer · Group 1 · Global Certification #4 · Woosong University</footer>
+
 <script>
-    let selectedFile = null;
+  let selectedFile = null;
 
-    function handleFile(input) {
-        selectedFile = input.files[0];
-        if (selectedFile) {
-            document.getElementById('fileName').textContent = selectedFile.name;
-            document.getElementById('analyzeBtn').disabled = false;
-        }
+  // ── Drag & drop ──────────────────────────────────────────────────────────
+  function onDragOver(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.add('drag-over');
+  }
+  function onDragLeave(e) {
+    document.getElementById('dropZone').classList.remove('drag-over');
+  }
+  function onDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) setFile(file);
+  }
+
+  // ── File selection ───────────────────────────────────────────────────────
+  function handleFile(input) {
+    if (input.files[0]) setFile(input.files[0]);
+  }
+
+  function setFile(file) {
+    // Client-side validation
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showError('Only PDF files are accepted. Please select a .pdf file.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showError(`File is too large (${(file.size/1024/1024).toFixed(1)} MB). Maximum is 10 MB.`);
+      return;
+    }
+    selectedFile = file;
+    document.getElementById('fName').textContent = file.name;
+    document.getElementById('fileChosen').style.display = 'flex';
+    document.getElementById('analyzeBtn').disabled = false;
+    hideError();
+  }
+
+  function clearFile(e) {
+    e.stopPropagation();
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileChosen').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = true;
+  }
+
+  // ── Step helpers ─────────────────────────────────────────────────────────
+  function setStep(n, state) {
+    const el = document.getElementById('step' + n);
+    el.className = 'step ' + state;
+    const icon = document.getElementById('s' + n + 'icon');
+    if (state === 'active') {
+      icon.innerHTML = '<div class="step-spin"></div>';
+    } else if (state === 'done') {
+      icon.textContent = '✅';
+    }
+  }
+
+  // ── Simulate step timing ─────────────────────────────────────────────────
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // ── Main analyze flow ────────────────────────────────────────────────────
+  async function analyze() {
+    if (!selectedFile) return;
+
+    // Reset UI
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('analyzeBtn').disabled = true;
+    hideError();
+
+    // Reset steps
+    [1,2,3].forEach(n => { document.getElementById('step'+n).className = 'step'; });
+    document.getElementById('s1icon').textContent = '☁️';
+    document.getElementById('s2icon').textContent = '🔍';
+    document.getElementById('s3icon').textContent = '🤖';
+
+    setStep(1, 'active');
+    await sleep(400);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    let data;
+    try {
+      // Show upload step, then flip to extract, then analyze
+      const fetchPromise = fetch('/analyze', { method: 'POST', body: formData });
+
+      await sleep(1200);
+      setStep(1, 'done');
+      setStep(2, 'active');
+      await sleep(2000);
+      setStep(2, 'done');
+      setStep(3, 'active');
+
+      const response = await fetchPromise;
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ detail: 'Analysis failed. Please try again.' }));
+        throw new Error(err.detail || 'Analysis failed. Please try again.');
+      }
+      data = await response.json();
+    } catch (err) {
+      document.getElementById('loader').style.display = 'none';
+      showError(err.message);
+      document.getElementById('analyzeBtn').disabled = false;
+      return;
     }
 
-    async function analyze() {
-        if (!selectedFile) return;
+    setStep(3, 'done');
+    await sleep(400);
 
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('results').style.display = 'none';
-        document.getElementById('error').style.display = 'none';
-        document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('loader').style.display = 'none';
+    renderResults(data.feedback);
+  }
 
-        const formData = new FormData();
-        formData.append('file', selectedFile);
+  // ── Render results ───────────────────────────────────────────────────────
+  function renderResults(f) {
+    // ATS Score ring
+    const score = f.ats_score;
+    const ring  = document.getElementById('scoreRing');
+    const lbl   = document.getElementById('scoreLbl');
+    ring.style.setProperty('--pct', score);
 
-        try {
-            const response = await fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            });
+    let tier, label;
+    if      (score >= 80) { tier = 'great'; label = 'Excellent'; }
+    else if (score >= 65) { tier = 'good';  label = 'Good';      }
+    else if (score >= 45) { tier = 'fair';  label = 'Fair';      }
+    else                  { tier = 'poor';  label = 'Poor';      }
 
-            if (!response.ok) throw new Error('Analysis failed. Please try again.');
+    ring.className = 'score-ring ' + tier;
+    document.getElementById('scoreNum').textContent = score;
+    lbl.className  = 'score-label ' + tier;
+    lbl.textContent = label;
 
-            const data = await response.json();
-            const f = data.feedback;
+    // Content
+    document.getElementById('summary').textContent = f.professional_summary;
 
-            document.getElementById('atsScore').textContent = f.ats_score;
-            document.getElementById('summary').textContent = f.professional_summary;
+    document.getElementById('skillGaps').innerHTML =
+      (f.skill_gaps || []).map(s => `<span class="tag">${escHtml(s)}</span>`).join('');
 
-            document.getElementById('skillGaps').innerHTML =
-                f.skill_gaps.map(s => `<span class="tag">${s}</span>`).join('');
+    document.getElementById('roles').innerHTML =
+      (f.role_recommendations || []).map(r => `<span class="tag">${escHtml(r)}</span>`).join('');
 
-            document.getElementById('roles').innerHTML =
-                f.role_recommendations.map(r => `<span class="tag">${r}</span>`).join('');
+    document.getElementById('suggestions').innerHTML =
+      (f.improvement_suggestions || []).map(s => `<li>${escHtml(s)}</li>`).join('');
 
-            document.getElementById('suggestions').innerHTML =
-                f.improvement_suggestions.map(s => `<li>${s}</li>`).join('');
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('analyzeBtn').disabled = false;
+  }
 
-            document.getElementById('results').style.display = 'block';
-
-        } catch (err) {
-            document.getElementById('error').textContent = err.message;
-            document.getElementById('error').style.display = 'block';
-        } finally {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('analyzeBtn').disabled = false;
-        }
-    }
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function showError(msg) {
+    document.getElementById('errMsg').textContent = msg;
+    document.getElementById('errorBox').style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+  function reset() {
+    clearFile({ stopPropagation: () => {} });
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('loader').style.display  = 'none';
+    hideError();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 </script>
 </body>
 </html>
