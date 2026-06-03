@@ -55,14 +55,14 @@ h1{font-size:clamp(2.8rem,8vw,5rem);font-weight:700;line-height:.95;letter-spaci
 .err-retry:hover{color:var(--fg)}
 #results{display:none;margin-top:40px;animation:fadeUp .5s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.score-block{padding:48px 28px;border:1px solid var(--border);background:var(--card);text-align:center;margin-bottom:8px;position:relative;overflow:hidden}
+.score-block{padding:48px 28px;border:1px solid rgba(255,255,255,.12);background:rgba(12,12,12,.72);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);text-align:center;margin-bottom:8px;position:relative;overflow:hidden}
 .score-block::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 130%,rgba(0,255,136,.05),transparent 60%);pointer-events:none}
 .score-pre{font-size:.65rem;color:var(--fg3);letter-spacing:.18em;margin-bottom:12px}
 .score-num{font-size:clamp(4.5rem,16vw,8rem);font-weight:700;line-height:1;letter-spacing:-.04em;transition:color .5s}
 .score-tier{font-size:.72rem;letter-spacing:.18em;margin-top:8px;margin-bottom:20px}
 .score-bar{height:2px;background:rgba(255,255,255,.08);max-width:280px;margin:0 auto}
 .score-fill{height:100%;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
-.card{border:1px solid var(--border);background:var(--card);padding:24px;margin-bottom:8px}
+.card{border:1px solid rgba(255,255,255,.1);background:rgba(12,12,12,.72);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);padding:24px;margin-bottom:8px}
 .card-lbl{font-size:.65rem;color:var(--fg3);letter-spacing:.14em;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:10px}
 .card-body{font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.75}
 .tag-row{display:flex;flex-wrap:wrap;gap:8px}
@@ -85,7 +85,21 @@ h1{font-size:clamp(2.8rem,8vw,5rem);font-weight:700;line-height:.95;letter-spaci
 .role-btn.active{background:var(--green);color:var(--bg)}
 .role-btn:disabled{opacity:.4;cursor:not-allowed}
 #jobLoader{display:none;font-size:.7rem;color:var(--fg3);letter-spacing:.12em;padding:20px 0}
-.job-card{border:1px solid var(--border);background:var(--card);padding:20px 22px;margin-bottom:8px}
+.job-card{border:1px solid rgba(255,255,255,.1);background:rgba(12,12,12,.72);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);padding:20px 22px;margin-bottom:8px}
+.btn-dl{flex:1;padding:13px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.35);color:var(--green);font-family:var(--font);font-size:.7rem;letter-spacing:.1em;cursor:pointer;transition:background .2s}
+.btn-dl:hover{background:rgba(0,255,136,.2)}
+@media print{
+  #terrain,header,.upload-zone,#analyzeBtn,#loader,#errorBox,#agent,.actions-row,footer{display:none!important}
+  body{background:#fff;color:#000}
+  body::after{display:none}
+  #results{display:block!important;margin:0;animation:none}
+  .score-block,.card{background:#f5f5f5!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid #ddd!important;break-inside:avoid;margin-bottom:12px}
+  .score-num,.score-tier,.card-body,.sug-list li{color:#111!important}
+  .card-lbl,.score-pre{color:#666!important}
+  .tag{color:#333!important;border-color:#ccc!important;background:#eee!important}
+  .sug-arrow{color:#00aa55!important}
+  .score-fill{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
 .job-idx{font-size:.6rem;color:var(--fg3);letter-spacing:.1em;margin-bottom:8px}
 .job-title{font-size:.9rem;font-weight:700;margin-bottom:4px}
 .job-co{font-size:.75rem;color:var(--green);margin-bottom:10px}
@@ -152,7 +166,10 @@ footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text
     <div class="card"><div class="card-lbl">// SKILL_GAPS</div><div class="tag-row" id="skillGaps"></div></div>
     <div class="card"><div class="card-lbl">// ROLE_RECOMMENDATIONS</div><div class="tag-row" id="roles"></div></div>
     <div class="card"><div class="card-lbl">// IMPROVEMENT_SUGGESTIONS</div><ul class="sug-list" id="suggestions"></ul></div>
-    <div class="actions-row"><button class="btn-outline" onclick="reset()">&#x21BA; NEW ANALYSIS</button></div>
+    <div class="actions-row">
+      <button class="btn-outline" onclick="reset()">&#x21BA; NEW ANALYSIS</button>
+      <button class="btn-dl" onclick="downloadPDF()">&#x2193; DOWNLOAD PDF</button>
+    </div>
   </div>
 
   <div id="agent">
@@ -493,6 +510,12 @@ function reset(){
   document.getElementById('jobResults').innerHTML='';
   document.getElementById('roleButtons').innerHTML='';
   hideErr();window.scrollTo({top:0,behavior:'smooth'});
+}
+function downloadPDF(){
+  const orig=document.title;
+  document.title='Resume_Analysis_'+new Date().toISOString().slice(0,10);
+  window.print();
+  document.title=orig;
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
