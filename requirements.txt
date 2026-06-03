@@ -7,3 +7,4 @@ python-multipart
 aiofiles
 gunicorn
 azure-monitor-opentelemetry
+httpx

@@ -1,674 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Resume Analyzer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI RESUME ANALYZER</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
   <style>
-    /* ── Reset & Tokens ────────────────────────────────────────────────────── */
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-    :root {
-      --bg:        #080e1a;
-      --surface:   #111827;
-      --surface2:  #1c2533;
-      --border:    #1f2d42;
-      --blue:      #3b82f6;
-      --blue-dim:  #1d4ed8;
-      --purple:    #7c3aed;
-      --text:      #e2e8f0;
-      --muted:     #64748b;
-      --green:     #10b981;
-      --amber:     #f59e0b;
-      --red:       #ef4444;
-      --radius:    14px;
-      --font:      'DM Sans', sans-serif;
-      --mono:      'DM Mono', monospace;
-    }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 48px 20px 80px;
-    }
-
-    /* ── Layout ────────────────────────────────────────────────────────────── */
-    .wrap { width: 100%; max-width: 680px; }
-
-    /* ── Header ────────────────────────────────────────────────────────────── */
-    header { text-align: center; margin-bottom: 44px; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(59,130,246,0.12);
-      border: 1px solid rgba(59,130,246,0.25);
-      color: #93c5fd;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 5px 12px;
-      border-radius: 999px;
-      margin-bottom: 18px;
-    }
-    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    h1 {
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      font-weight: 700;
-      line-height: 1.15;
-      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 60%, #f0abfc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 12px;
-    }
-
-    .sub {
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
-
-    /* ── Upload zone ───────────────────────────────────────────────────────── */
-    #dropZone {
-      background: var(--surface);
-      border: 2px dashed var(--border);
-      border-radius: var(--radius);
-      padding: 52px 30px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 16px;
-      position: relative;
-    }
-    #dropZone.drag-over {
-      border-color: var(--blue);
-      background: rgba(59,130,246,0.06);
-    }
-    #dropZone input { display: none; }
-
-    .upload-icon {
-      font-size: 2.6rem;
-      margin-bottom: 14px;
-      line-height: 1;
-      display: block;
-    }
-    .upload-hint { color: var(--muted); font-size: 0.9rem; }
-    .upload-hint span { color: var(--blue); font-weight: 600; }
-    .upload-cap { font-size: 0.78rem; color: var(--muted); margin-top: 8px; opacity: 0.7; }
-
-    #fileChosen {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 14px;
-      background: rgba(59,130,246,0.1);
-      border-radius: 8px;
-      padding: 10px 16px;
-    }
-    #fileChosen .fname {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      color: #93c5fd;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 300px;
-    }
-    .remove-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 1.1rem;
-      line-height: 1;
-      padding: 0;
-      flex-shrink: 0;
-    }
-    .remove-btn:hover { color: var(--red); }
-
-    /* ── Analyze button ────────────────────────────────────────────────────── */
-    #analyzeBtn {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(90deg, var(--blue-dim), var(--purple));
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-family: var(--font);
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-    #analyzeBtn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-    #analyzeBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    /* ── Loader ────────────────────────────────────────────────────────────── */
-    #loader { display: none; margin-top: 32px; }
-
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .step {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 18px;
-      background: var(--surface);
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      opacity: 0.4;
-      transition: opacity 0.3s;
-    }
-    .step.active  { opacity: 1; border-color: rgba(59,130,246,0.4); }
-    .step.done    { opacity: 0.7; }
-
-    .step-icon {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; flex-shrink: 0;
-      background: var(--surface2);
-    }
-    .step.active .step-icon { background: rgba(59,130,246,0.15); }
-    .step.done   .step-icon { background: rgba(16,185,129,0.15); }
-
-    .step-spin {
-      width: 18px; height: 18px;
-      border: 2px solid var(--border);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .step-label { font-size: 0.9rem; font-weight: 500; }
-    .step-desc  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
-
-    /* ── Error ─────────────────────────────────────────────────────────────── */
-    #errorBox {
-      display: none;
-      margin-top: 20px;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 10px;
-      padding: 16px 18px;
-      display: none;
-      align-items: flex-start;
-      gap: 12px;
-    }
-    .err-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
-    .err-msg  { color: #fca5a5; font-size: 0.9rem; line-height: 1.5; }
-    .err-retry {
-      margin-top: 10px;
-      font-size: 0.83rem;
-      color: var(--blue);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: var(--font);
-      padding: 0;
-      font-weight: 600;
-    }
-    .err-retry:hover { text-decoration: underline; }
-
-    /* ── Results ───────────────────────────────────────────────────────────── */
-    #results { display: none; margin-top: 32px; animation: fadeUp 0.4s ease; }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
-
-    /* ATS Score card */
-    .score-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 32px 24px;
-      text-align: center;
-      margin-bottom: 14px;
-      position: relative;
-      overflow: hidden;
-    }
-    .score-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.07) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .score-ring {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      margin-bottom: 14px;
-      position: relative;
-    }
-    .score-num {
-      font-size: 2.8rem;
-      font-weight: 800;
-      line-height: 1;
-      font-family: var(--mono);
-    }
-    .score-ring.great  { background: conic-gradient(var(--green)  calc(var(--pct) * 1%), var(--surface2) 0); }
-    .score-ring.good   { background: conic-gradient(var(--blue)   calc(var(--pct) * 1%), var(--surface2) 0); }
-    .score-ring.fair   { background: conic-gradient(var(--amber)  calc(var(--pct) * 1%), var(--surface2) 0); }
-    .score-ring.poor   { background: conic-gradient(var(--red)    calc(var(--pct) * 1%), var(--surface2) 0); }
-
-    .score-inner {
-      width: 84px; height: 84px;
-      border-radius: 50%;
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .score-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .score-label.great { color: var(--green); }
-    .score-label.good  { color: var(--blue);  }
-    .score-label.fair  { color: var(--amber); }
-    .score-label.poor  { color: var(--red);   }
-
-    .score-caption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; }
-
-    /* Content cards */
-    .card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 22px 22px;
-      margin-bottom: 14px;
-    }
-    .card-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--blue);
-      font-weight: 700;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .card-label::before {
-      content: '';
-      display: block;
-      width: 3px; height: 14px;
-      background: var(--blue);
-      border-radius: 2px;
-    }
-
-    .summary-text {
-      color: #cbd5e1;
-      line-height: 1.7;
-      font-size: 0.95rem;
-    }
-
-    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .tag {
-      display: inline-block;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 99px;
-      padding: 5px 13px;
-      font-size: 0.83rem;
-      color: #cbd5e1;
-    }
-
-    .suggestions { list-style: none; }
-    .suggestions li {
-      display: flex;
-      gap: 10px;
-      color: #cbd5e1;
-      font-size: 0.9rem;
-      line-height: 1.55;
-      padding: 9px 0;
-      border-bottom: 1px solid rgba(31,45,66,0.7);
-    }
-    .suggestions li:last-child { border-bottom: none; padding-bottom: 0; }
-    .suggestions li::before {
-      content: '→';
-      color: var(--blue);
-      flex-shrink: 0;
-      font-weight: 700;
-      margin-top: 1px;
-    }
-
-    /* ── Actions ───────────────────────────────────────────────────────────── */
-    .actions { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-ghost {
-      flex: 1;
-      padding: 12px;
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-family: var(--font);
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .btn-ghost:hover { border-color: var(--blue); }
-
-    /* ── Footer ────────────────────────────────────────────────────────────── */
-    footer {
-      margin-top: 60px;
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--muted);
-      opacity: 0.5;
-    }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#000;--fg:#fff;--fg2:rgba(0,255,136,.65);--fg3:rgba(0,255,136,.38);--green:#00ff88;--amber:#ffb800;--red:#ff3344;--border:rgba(255,255,255,.1);--card:rgba(255,255,255,.04);--font:'Space Mono',monospace}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0px,rgba(0,0,0,.04) 1px,transparent 1px,transparent 3px);pointer-events:none;z-index:9999}
+#terrain{position:fixed;inset:0;z-index:0;opacity:.7}
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 24px 120px}
+header{padding-top:80px;padding-bottom:60px}
+.hdr-tag{font-size:.7rem;color:var(--green);letter-spacing:.18em;margin-bottom:20px}
+h1{font-size:clamp(2.8rem,8vw,5rem);font-weight:700;line-height:.95;letter-spacing:-.02em;margin-bottom:20px}
+.hdr-sub{font-size:.72rem;color:var(--fg2);letter-spacing:.1em;line-height:1.8}
+.sec-label{font-size:.65rem;color:var(--fg3);letter-spacing:.14em;margin-bottom:14px}
+.upload-zone{border:1px solid var(--border);background:var(--card);padding:40px 28px;cursor:pointer;position:relative;transition:border-color .2s;margin-bottom:14px}
+.upload-zone::before,.upload-zone::after{content:'';position:absolute;width:14px;height:14px}
+.upload-zone::before{top:-1px;left:-1px;border-top:2px solid var(--green);border-left:2px solid var(--green)}
+.upload-zone::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--green);border-right:2px solid var(--green)}
+.upload-zone:hover{border-color:rgba(255,255,255,.25)}
+.upload-zone.drag-over{border-color:var(--green);background:rgba(0,255,136,.04)}
+.upload-zone input{display:none}
+.upload-icon{font-size:1.6rem;margin-bottom:14px;color:var(--fg2)}
+.upload-main{font-size:.8rem;letter-spacing:.08em;margin-bottom:8px}
+.upload-cap{font-size:.65rem;color:var(--fg3);letter-spacing:.1em}
+.file-chosen{display:none;align-items:center;justify-content:space-between;margin-top:16px;padding:10px 14px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2)}
+.fname{font-size:.75rem;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rm-btn{background:none;border:none;color:var(--fg3);cursor:pointer;font-family:var(--font);font-size:1rem;flex-shrink:0;margin-left:12px}
+.rm-btn:hover{color:var(--red)}
+.analyze-btn{width:100%;padding:16px;background:var(--fg);color:var(--bg);border:none;font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.14em;cursor:pointer;transition:background .15s}
+.analyze-btn:hover:not(:disabled){background:var(--green)}
+.analyze-btn:disabled{background:rgba(255,255,255,.12);color:var(--fg3);cursor:not-allowed}
+#loader{display:none;margin-top:32px}
+.t-line{display:flex;align-items:center;gap:12px;padding:11px 16px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;font-size:.72rem;letter-spacing:.06em;opacity:.35;transition:opacity .3s}
+.t-line.active{opacity:1;border-color:rgba(0,255,136,.3)}
+.t-line.done{opacity:.65}
+.t-num{color:var(--fg3);min-width:28px}
+.t-lbl{flex:1}
+.t-dots{color:var(--fg3);letter-spacing:.04em}
+.t-status{min-width:60px;text-align:right}
+.t-status.ok{color:var(--green)}
+.t-status.run{color:var(--amber)}
+.spin::after{content:'◐';animation:sp .6s steps(4) infinite}
+@keyframes sp{0%{content:'◐'}25%{content:'◓'}50%{content:'◑'}75%{content:'◒'}}
+#errorBox{display:none;margin-top:24px;padding:16px 18px;border:1px solid rgba(255,51,68,.35);background:rgba(255,51,68,.05);font-size:.75rem;line-height:1.7}
+.err-prefix{color:var(--red);margin-right:8px}
+.err-retry{display:inline-block;margin-top:10px;color:var(--fg2);background:none;border:none;font-family:var(--font);font-size:.72rem;cursor:pointer;letter-spacing:.08em}
+.err-retry:hover{color:var(--fg)}
+#results{display:none;margin-top:40px;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.score-block{padding:48px 28px;border:1px solid var(--border);background:var(--card);text-align:center;margin-bottom:8px;position:relative;overflow:hidden}
+.score-block::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 130%,rgba(0,255,136,.05),transparent 60%);pointer-events:none}
+.score-pre{font-size:.65rem;color:var(--fg3);letter-spacing:.18em;margin-bottom:12px}
+.score-num{font-size:clamp(4.5rem,16vw,8rem);font-weight:700;line-height:1;letter-spacing:-.04em;transition:color .5s}
+.score-tier{font-size:.72rem;letter-spacing:.18em;margin-top:8px;margin-bottom:20px}
+.score-bar{height:2px;background:rgba(255,255,255,.08);max-width:280px;margin:0 auto}
+.score-fill{height:100%;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.card{border:1px solid var(--border);background:var(--card);padding:24px;margin-bottom:8px}
+.card-lbl{font-size:.65rem;color:var(--fg3);letter-spacing:.14em;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:10px}
+.card-body{font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.75}
+.tag-row{display:flex;flex-wrap:wrap;gap:8px}
+.tag{font-size:.68rem;color:var(--fg2);border:1px solid var(--border);padding:5px 12px;letter-spacing:.06em;transition:border-color .2s,color .2s}
+.tag:hover{border-color:rgba(255,255,255,.3);color:var(--fg)}
+.sug-list{list-style:none}
+.sug-list li{font-size:.8rem;color:rgba(255,255,255,.75);padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.65;display:flex;gap:12px}
+.sug-list li:last-child{border-bottom:none;padding-bottom:0}
+.sug-arrow{color:var(--green);flex-shrink:0}
+.actions-row{display:flex;gap:10px;margin-top:8px}
+.btn-outline{flex:1;padding:13px;background:none;border:1px solid var(--border);color:var(--fg2);font-family:var(--font);font-size:.7rem;letter-spacing:.1em;cursor:pointer;transition:border-color .2s,color .2s}
+.btn-outline:hover{border-color:rgba(255,255,255,.3);color:var(--fg)}
+#agent{display:none;margin-top:40px;animation:fadeUp .5s ease}
+.agent-hdr{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.agent-lbl{font-size:.7rem;color:var(--green);letter-spacing:.14em}
+.agent-sub{font-size:.62rem;color:var(--fg3);letter-spacing:.08em}
+.role-btns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.role-btn{font-family:var(--font);font-size:.68rem;letter-spacing:.08em;padding:8px 16px;background:none;border:1px solid rgba(0,255,136,.3);color:var(--green);cursor:pointer;transition:background .2s}
+.role-btn:hover{background:rgba(0,255,136,.08)}
+.role-btn.active{background:var(--green);color:var(--bg)}
+.role-btn:disabled{opacity:.4;cursor:not-allowed}
+#jobLoader{display:none;font-size:.7rem;color:var(--fg3);letter-spacing:.12em;padding:20px 0}
+.job-card{border:1px solid var(--border);background:var(--card);padding:20px 22px;margin-bottom:8px}
+.job-idx{font-size:.6rem;color:var(--fg3);letter-spacing:.1em;margin-bottom:8px}
+.job-title{font-size:.9rem;font-weight:700;margin-bottom:4px}
+.job-co{font-size:.75rem;color:var(--green);margin-bottom:10px}
+.job-meta{font-size:.65rem;color:var(--fg3);letter-spacing:.06em;margin-bottom:14px;line-height:1.6}
+.job-btns{display:flex;gap:8px;flex-wrap:wrap}
+.jb-view{font-family:var(--font);font-size:.65rem;letter-spacing:.1em;padding:8px 14px;background:none;border:1px solid var(--border);color:var(--fg2);cursor:pointer;text-decoration:none;display:inline-block;transition:border-color .2s,color .2s}
+.jb-view:hover{border-color:rgba(255,255,255,.3);color:var(--fg)}
+.jb-cl{font-family:var(--font);font-size:.65rem;letter-spacing:.1em;padding:8px 14px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.35);color:var(--green);cursor:pointer;transition:background .2s}
+.jb-cl:hover{background:rgba(0,255,136,.16)}
+.jb-cl:disabled{opacity:.4;cursor:not-allowed}
+.cl-panel{display:none;margin-top:14px;border:1px solid rgba(0,255,136,.15);background:rgba(0,255,136,.03);padding:18px 20px}
+.cl-panel-hdr{font-size:.62rem;color:var(--green);letter-spacing:.14em;margin-bottom:14px}
+.cl-text{font-size:.78rem;color:rgba(255,255,255,.8);line-height:1.8;white-space:pre-wrap;min-height:60px}
+.cl-actions{display:flex;gap:8px;margin-top:14px}
+.cl-copy{font-family:var(--font);font-size:.65rem;letter-spacing:.1em;padding:8px 16px;background:var(--green);color:var(--bg);border:none;cursor:pointer;font-weight:700;transition:opacity .2s}
+.cl-copy:hover{opacity:.85}
+.linkedin-btn{display:inline-block;margin-top:14px;font-size:.68rem;letter-spacing:.1em;color:var(--fg2);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:2px;transition:color .2s,border-color .2s}
+.linkedin-btn:hover{color:var(--fg);border-color:rgba(255,255,255,.4)}
+footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text-align:center}
   </style>
 </head>
 <body>
+<canvas id="terrain"></canvas>
 <div class="wrap">
-
-  <!-- Header -->
   <header>
-    <div class="badge">Powered by Azure AI</div>
-    <h1>AI Resume Analyzer</h1>
-    <p class="sub">Upload your résumé and receive instant feedback:<br>ATS score, skill gaps, and role matches.</p>
+    <div class="hdr-tag">// AZURE AI &middot; GPT-4o &middot; DOCUMENT INTELLIGENCE</div>
+    <h1>AI RESUME<br>ANALYZER</h1>
+    <div class="hdr-sub">UPLOAD PDF &rarr; EXTRACT &rarr; ANALYZE &rarr; MATCH JOBS<br>WOOSONG UNIVERSITY &middot; GLOBAL CERTIFICATION #4 &middot; GROUP 1</div>
   </header>
 
-  <!-- Upload zone -->
-  <div id="dropZone"
-       ondragover="onDragOver(event)"
-       ondragleave="onDragLeave(event)"
-       ondrop="onDrop(event)"
-       onclick="document.getElementById('fileInput').click()">
-    <input type="file" id="fileInput" accept=".pdf" onchange="handleFile(this)" />
-    <span class="upload-icon">📄</span>
-    <p class="upload-hint"><span>Click to upload</span> or drag & drop your résumé</p>
-    <p class="upload-cap">PDF only · Max 10 MB</p>
-    <div id="fileChosen">
+  <div class="sec-label">// UPLOAD_RESUME</div>
+  <div id="dropZone" class="upload-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".pdf" onchange="handleFile(this)"/>
+    <div class="upload-icon">&#9650;</div>
+    <div class="upload-main">DRAG &amp; DROP OR CLICK TO UPLOAD</div>
+    <div class="upload-cap">ACCEPTS: .PDF &nbsp;/&nbsp; MAX: 10MB</div>
+    <div class="file-chosen" id="fileChosen">
       <span class="fname" id="fName"></span>
-      <button class="remove-btn" onclick="clearFile(event)" title="Remove file">✕</button>
+      <button class="rm-btn" onclick="clearFile(event)">&times;</button>
     </div>
   </div>
+  <button class="analyze-btn" id="analyzeBtn" onclick="analyze()" disabled>RUN ANALYSIS &rarr;</button>
 
-  <button id="analyzeBtn" onclick="analyze()" disabled>Analyze My Resume</button>
-
-  <!-- Step-by-step loader -->
   <div id="loader">
-    <div class="steps">
-      <div class="step" id="step1">
-        <div class="step-icon" id="s1icon">☁️</div>
-        <div>
-          <div class="step-label">Uploading to Azure Blob Storage</div>
-          <div class="step-desc">Storing your résumé securely in the cloud</div>
-        </div>
-      </div>
-      <div class="step" id="step2">
-        <div class="step-icon" id="s2icon">🔍</div>
-        <div>
-          <div class="step-label">Extracting text via Document Intelligence</div>
-          <div class="step-desc">Azure OCR is reading your résumé content</div>
-        </div>
-      </div>
-      <div class="step" id="step3">
-        <div class="step-icon" id="s3icon">🤖</div>
-        <div>
-          <div class="step-label">Analyzing with Azure OpenAI GPT-4o</div>
-          <div class="step-desc">Generating your ATS score and feedback</div>
-        </div>
-      </div>
-    </div>
+    <div class="t-line" id="tl1"><span class="t-num">[01]</span><span class="t-lbl">UPLOAD TO AZURE BLOB STORAGE</span><span class="t-dots">............</span><span class="t-status" id="ts1"></span></div>
+    <div class="t-line" id="tl2"><span class="t-num">[02]</span><span class="t-lbl">EXTRACT TEXT VIA DOCUMENT INTELLIGENCE</span><span class="t-dots">...</span><span class="t-status" id="ts2"></span></div>
+    <div class="t-line" id="tl3"><span class="t-num">[03]</span><span class="t-lbl">ANALYZE WITH AZURE OPENAI GPT-4o</span><span class="t-dots">.......</span><span class="t-status" id="ts3"></span></div>
   </div>
 
-  <!-- Error box -->
-  <div id="errorBox" style="display:none; margin-top:20px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:16px 18px;">
-    <div style="display:flex; align-items:flex-start; gap:12px;">
-      <span style="font-size:1.1rem; flex-shrink:0; margin-top:1px;">⚠️</span>
-      <div>
-        <div class="err-msg" id="errMsg" style="color:#fca5a5; font-size:0.9rem; line-height:1.5;"></div>
-        <button class="err-retry" onclick="reset()" style="margin-top:10px; font-size:0.83rem; color:var(--blue); background:none; border:none; cursor:pointer; font-family:var(--font); padding:0; font-weight:600;">← Try again</button>
-      </div>
-    </div>
+  <div id="errorBox">
+    <span class="err-prefix">ERR &gt;</span><span id="errMsg"></span><br/>
+    <button class="err-retry" onclick="reset()">&#x21BA; RETRY</button>
   </div>
 
-  <!-- Results -->
   <div id="results">
-
-    <!-- ATS Score -->
-    <div class="score-card">
-      <div class="score-ring" id="scoreRing">
-        <div class="score-inner">
-          <span class="score-num" id="scoreNum">--</span>
-        </div>
-      </div>
-      <div class="score-label" id="scoreLbl">ATS Score</div>
-      <div class="score-caption">ATS Compatibility Score</div>
+    <div class="sec-label" style="margin-bottom:0">// ATS_SCORE</div>
+    <div class="score-block">
+      <div class="score-pre">ATS_COMPATIBILITY_SCORE</div>
+      <div class="score-num" id="scoreNum">--</div>
+      <div class="score-tier" id="scoreTier"></div>
+      <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
     </div>
-
-    <!-- Professional Summary -->
-    <div class="card">
-      <div class="card-label">Professional Summary</div>
-      <p class="summary-text" id="summary"></p>
-    </div>
-
-    <!-- Skill Gaps -->
-    <div class="card">
-      <div class="card-label">Skill Gaps</div>
-      <div class="tags" id="skillGaps"></div>
-    </div>
-
-    <!-- Role Recommendations -->
-    <div class="card">
-      <div class="card-label">Role Recommendations</div>
-      <div class="tags" id="roles"></div>
-    </div>
-
-    <!-- Improvement Suggestions -->
-    <div class="card">
-      <div class="card-label">Improvement Suggestions</div>
-      <ul class="suggestions" id="suggestions"></ul>
-    </div>
-
-    <!-- Actions -->
-    <div class="actions">
-      <button class="btn-ghost" onclick="reset()">⟳ Analyze Another Resume</button>
-    </div>
+    <div class="card"><div class="card-lbl">// PROFESSIONAL_SUMMARY</div><div class="card-body" id="summary"></div></div>
+    <div class="card"><div class="card-lbl">// SKILL_GAPS</div><div class="tag-row" id="skillGaps"></div></div>
+    <div class="card"><div class="card-lbl">// ROLE_RECOMMENDATIONS</div><div class="tag-row" id="roles"></div></div>
+    <div class="card"><div class="card-lbl">// IMPROVEMENT_SUGGESTIONS</div><ul class="sug-list" id="suggestions"></ul></div>
+    <div class="actions-row"><button class="btn-outline" onclick="reset()">&#x21BA; NEW ANALYSIS</button></div>
   </div>
 
+  <div id="agent">
+    <div class="agent-hdr">
+      <span class="agent-lbl">// AGENT: JOB_MATCHER</span>
+      <span class="agent-sub">CLICK A ROLE &rarr; SEARCH JSEARCH + LINKEDIN</span>
+    </div>
+    <div class="role-btns" id="roleButtons"></div>
+    <div id="jobLoader">SEARCHING JSEARCH DATABASE...</div>
+    <div id="jobResults"></div>
+    <a id="linkedInBtn" href="#" target="_blank" class="linkedin-btn" style="display:none">ALSO SEARCH ON LINKEDIN &rarr;</a>
+  </div>
+
+  <footer>AI RESUME ANALYZER &middot; GROUP 1 &middot; GLOBAL CERTIFICATION #4 &middot; WOOSONG UNIVERSITY</footer>
 </div>
-
-<footer>AI Resume Analyzer · Group 1 · Global Certification #4 · Woosong University</footer>
-
 <script>
-  let selectedFile = null;
+/* ── CANVAS TERRAIN ─────────────────────────────────────────── */
+(function(){
+  const cv=document.getElementById('terrain'),ctx=cv.getContext('2d');
+  let W,H,t=0,mouseX=-9999,mouseY=-9999;
+  const COLS=55,ROWS=28;
+  const MAG_R=160, MAG_F=72; // repulsion radius (px) and max force (px)
 
-  // ── Drag & drop ──────────────────────────────────────────────────────────
-  function onDragOver(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.add('drag-over');
-  }
-  function onDragLeave(e) {
-    document.getElementById('dropZone').classList.remove('drag-over');
-  }
-  function onDrop(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) setFile(file);
-  }
+  window.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY});
+  window.addEventListener('mouseleave',()=>{mouseX=-9999;mouseY=-9999});
 
-  // ── File selection ───────────────────────────────────────────────────────
-  function handleFile(input) {
-    if (input.files[0]) setFile(input.files[0]);
-  }
+  const TEXTS=[
+    'x: 0.42','y: 0.87','X: 127','Y: 384','(0.31, 0.69)','(x,y)=(0.5,0.3)',
+    'X: −0.12','Y: 1.047','z: 0.003','x=0','y=0','z=1',
+    '3.14159','1.61803','0.99723','2.71828','127','42','∞','0.001',
+    'x²+y²=r²','∇f(x,y)','σ=0.12','μ=84','n=842','p<0.001',
+    'r²=0.94','Δx=0.01','∂f/∂x','f(x)→0','lim x→∞',
+    '01001011','0xA4F2','0b1101','0xFF88','10110100','0x00FF',
+    'ATS_V2','NLP_PROC','CV_PARSE','BERT_EMB','PROC:94%',
+    'VCC','GND','CLK','TX','RX','RST','PWM','ADC',
+    'IC1','U2','R47','C12','Q3','L1',
+  ];
+  const SHAPE_TYPES=['circle','triangle','rect','hexagon','diamond','cross','via','pcb_trace','pcb_ic','ring'];
+  const N=28;
+  const fl=Array.from({length:N},()=>mkF(true));
 
-  function setFile(file) {
-    // Client-side validation
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      showError('Only PDF files are accepted. Please select a .pdf file.');
-      return;
+  function mkF(init){
+    const isText=Math.random()<.42;
+    const type=isText?'text':SHAPE_TYPES[Math.floor(Math.random()*SHAPE_TYPES.length)];
+    const spd=0.12+Math.random()*.26;
+    let x,y,vx,vy;
+    if(init){
+      // scatter across full screen on load
+      x=Math.random()*(W||innerWidth);
+      y=Math.random()*(H||innerHeight);
+      const ang=Math.random()*Math.PI*2;
+      vx=Math.cos(ang)*spd*.5; vy=Math.sin(ang)*spd*.5;
+    } else {
+      // spawn from a random edge, drift inward
+      const cW=W||innerWidth,cH=H||innerHeight;
+      const edge=Math.floor(Math.random()*4);
+      const drift=(Math.random()-.5)*spd*.55;
+      if(edge===0){x=Math.random()*cW;y=-25;vx=drift;vy=spd;}        // top  → down
+      else if(edge===1){x=cW+25;y=Math.random()*cH;vx=-spd;vy=drift;} // right→ left
+      else if(edge===2){x=Math.random()*cW;y=cH+25;vx=drift;vy=-spd;} // bottom→up
+      else{x=-25;y=Math.random()*cH;vx=spd;vy=drift;}                  // left → right
     }
-    if (file.size > 10 * 1024 * 1024) {
-      showError(`File is too large (${(file.size/1024/1024).toFixed(1)} MB). Maximum is 10 MB.`);
-      return;
+    return{
+      type,x,y,
+      life:init?Math.floor(Math.random()*220):0,
+      maxLife:200+Math.random()*380,
+      vx,vy,
+      size:7+Math.random()*20,
+      rot:Math.random()*Math.PI*2,
+      rotV:(Math.random()-.5)*.009,
+      text:TEXTS[Math.floor(Math.random()*TEXTS.length)],
+      fs:9+Math.floor(Math.random()*5),
+    };
+  }
+
+  function drawF(f,op){
+    const g=`rgba(0,255,136,${op.toFixed(3)})`;
+    if(f.type==='text'){
+      ctx.fillStyle=g;ctx.font=`${f.fs}px "Space Mono",monospace`;
+      ctx.fillText(f.text,f.x,f.y);return;
     }
-    selectedFile = file;
-    document.getElementById('fName').textContent = file.name;
-    document.getElementById('fileChosen').style.display = 'flex';
-    document.getElementById('analyzeBtn').disabled = false;
-    hideError();
-  }
-
-  function clearFile(e) {
-    e.stopPropagation();
-    selectedFile = null;
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileChosen').style.display = 'none';
-    document.getElementById('analyzeBtn').disabled = true;
-  }
-
-  // ── Step helpers ─────────────────────────────────────────────────────────
-  function setStep(n, state) {
-    const el = document.getElementById('step' + n);
-    el.className = 'step ' + state;
-    const icon = document.getElementById('s' + n + 'icon');
-    if (state === 'active') {
-      icon.innerHTML = '<div class="step-spin"></div>';
-    } else if (state === 'done') {
-      icon.textContent = '✅';
+    ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rot);
+    ctx.strokeStyle=g;ctx.fillStyle=g;ctx.lineWidth=0.75;
+    const s=f.size;
+    switch(f.type){
+      case 'circle':
+        ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.stroke();break;
+      case 'ring':
+        ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.stroke();
+        ctx.beginPath();ctx.arc(0,0,s*.55,0,Math.PI*2);ctx.stroke();break;
+      case 'triangle':
+        ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.866,s*.5);ctx.lineTo(-s*.866,s*.5);
+        ctx.closePath();ctx.stroke();break;
+      case 'rect':
+        ctx.strokeRect(-s/2,-s/2,s,s);break;
+      case 'hexagon':
+        ctx.beginPath();
+        for(let i=0;i<6;i++){const a=i*Math.PI/3-Math.PI/6;i?ctx.lineTo(s*Math.cos(a),s*Math.sin(a)):ctx.moveTo(s*Math.cos(a),s*Math.sin(a))}
+        ctx.closePath();ctx.stroke();break;
+      case 'diamond':
+        ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.6,0);ctx.lineTo(0,s);ctx.lineTo(-s*.6,0);
+        ctx.closePath();ctx.stroke();break;
+      case 'cross':
+        ctx.beginPath();ctx.moveTo(-s,0);ctx.lineTo(s,0);ctx.moveTo(0,-s);ctx.lineTo(0,s);ctx.stroke();break;
+      case 'via':
+        ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.stroke();
+        ctx.beginPath();ctx.arc(0,0,s*.22,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.moveTo(-s*.6,0);ctx.lineTo(s*.6,0);ctx.moveTo(0,-s*.6);ctx.lineTo(0,s*.6);ctx.stroke();break;
+      case 'pcb_trace':
+        ctx.lineWidth=1.1;
+        ctx.beginPath();ctx.moveTo(-s,0);ctx.lineTo(0,0);ctx.lineTo(0,s);ctx.stroke();
+        ctx.fillRect(-s-3,-3,6,6);ctx.fillRect(-3,s-3,6,6);break;
+      case 'pcb_ic':
+        ctx.strokeRect(-s,-s*.6,s*2,s*1.2);
+        const pins=3,ps=s*1.2/pins;
+        for(let i=0;i<pins;i++){
+          const py=-s*.6+ps*.5+i*ps;
+          ctx.beginPath();ctx.moveTo(-s-6,py);ctx.lineTo(-s,py);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(s,py);ctx.lineTo(s+6,py);ctx.stroke();
+        }
+        ctx.beginPath();ctx.arc(-s+4,-s*.6+4,3,0,Math.PI*2);ctx.stroke();break;
     }
+    ctx.restore();
   }
 
-  // ── Simulate step timing ─────────────────────────────────────────────────
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
 
-  // ── Main analyze flow ────────────────────────────────────────────────────
-  async function analyze() {
-    if (!selectedFile) return;
+  function gh(c,r,t){
+    const nx=(c/COLS-.5)*3,ny=(r/ROWS-.55)*2;
+    const dist=Math.sqrt(nx*nx*.7+ny*ny*1.3);
+    const peak=Math.exp(-dist*dist*.75)*2.0;
+    return peak+Math.sin(c*.38+t*.85)*Math.cos(r*.3+t*.55)*.28+Math.sin(c*.14+r*.1+t*.42)*.14;
+  }
 
-    // Reset UI
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('loader').style.display = 'block';
-    document.getElementById('analyzeBtn').disabled = true;
-    hideError();
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const cw=W/COLS,rh=H/(ROWS*1.6),by=H*.72;
 
-    // Reset steps
-    [1,2,3].forEach(n => { document.getElementById('step'+n).className = 'step'; });
-    document.getElementById('s1icon').textContent = '☁️';
-    document.getElementById('s2icon').textContent = '🔍';
-    document.getElementById('s3icon').textContent = '🤖';
+    for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
+      const h=gh(c,r,t),px=Math.max(0,Math.min(1,(h-.05)/1.8));
+      let x=c*cw, y=by+(r-ROWS*.5)*rh-h*H*.28;
 
-    setStep(1, 'active');
-    await sleep(400);
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    let data;
-    try {
-      // Show upload step, then flip to extract, then analyze
-      const fetchPromise = fetch('/analyze', { method: 'POST', body: formData });
-
-      await sleep(1200);
-      setStep(1, 'done');
-      setStep(2, 'active');
-      await sleep(2000);
-      setStep(2, 'done');
-      setStep(3, 'active');
-
-      const response = await fetchPromise;
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ detail: 'Analysis failed. Please try again.' }));
-        throw new Error(err.detail || 'Analysis failed. Please try again.');
+      // ── Mouse repulsion ──────────────────────────────────────
+      const dx=x-mouseX, dy=y-mouseY;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<MAG_R&&d>0){
+        const force=Math.pow(1-d/MAG_R,2)*MAG_F;
+        x+=dx/d*force; y+=dy/d*force;
       }
-      data = await response.json();
-    } catch (err) {
-      document.getElementById('loader').style.display = 'none';
-      showError(err.message);
-      document.getElementById('analyzeBtn').disabled = false;
-      return;
-    }
 
-    setStep(3, 'done');
-    await sleep(400);
+      const sz=Math.max(.25,px*2.8),al=Math.min(.88,px*1.1+.04);
+      ctx.fillStyle=`rgba(255,255,255,${al.toFixed(3)})`;
+      ctx.beginPath();ctx.arc(x,y,sz,0,Math.PI*2);ctx.fill();
+    }}
 
-    document.getElementById('loader').style.display = 'none';
-    renderResults(data.feedback);
+    fl.forEach((f,i)=>{
+      f.life++;f.x+=f.vx;f.y+=f.vy;
+      if(f.type!=='text')f.rot+=f.rotV;
+      if(f.life>=f.maxLife){fl[i]=mkF(false);return;}
+      const op=Math.sin(f.life/f.maxLife*Math.PI)*.22;
+      if(op>.008)drawF(f,op);
+    });
+
+    t+=.005;requestAnimationFrame(draw);
   }
+  resize();window.addEventListener('resize',resize);draw();
+})();
 
-  // ── Render results ───────────────────────────────────────────────────────
-  function renderResults(f) {
-    // ATS Score ring
-    const score = f.ats_score;
-    const ring  = document.getElementById('scoreRing');
-    const lbl   = document.getElementById('scoreLbl');
-    ring.style.setProperty('--pct', score);
+/* ── STATE ──────────────────────────────────────────────────── */
+let selectedFile=null,resumeSummary='';
 
-    let tier, label;
-    if      (score >= 80) { tier = 'great'; label = 'Excellent'; }
-    else if (score >= 65) { tier = 'good';  label = 'Good';      }
-    else if (score >= 45) { tier = 'fair';  label = 'Fair';      }
-    else                  { tier = 'poor';  label = 'Poor';      }
+/* ── DRAG/DROP ──────────────────────────────────────────────── */
+function onDragOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('drag-over')}
+function onDragLeave(e){document.getElementById('dropZone').classList.remove('drag-over')}
+function onDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)setFile(f)}
+function handleFile(i){if(i.files[0])setFile(i.files[0])}
+function setFile(f){
+  if(!f.name.toLowerCase().endsWith('.pdf')){showErr('ONLY .PDF FILES ACCEPTED.');return}
+  if(f.size>10*1024*1024){showErr(`FILE TOO LARGE (${(f.size/1024/1024).toFixed(1)} MB). MAX: 10 MB.`);return}
+  selectedFile=f;
+  document.getElementById('fName').textContent=f.name;
+  document.getElementById('fileChosen').style.display='flex';
+  document.getElementById('analyzeBtn').disabled=false;
+  hideErr();
+}
+function clearFile(e){
+  e.stopPropagation();selectedFile=null;
+  document.getElementById('fileInput').value='';
+  document.getElementById('fileChosen').style.display='none';
+  document.getElementById('analyzeBtn').disabled=true;
+}
 
-    ring.className = 'score-ring ' + tier;
-    document.getElementById('scoreNum').textContent = score;
-    lbl.className  = 'score-label ' + tier;
-    lbl.textContent = label;
+/* ── LOADER ─────────────────────────────────────────────────── */
+function setStep(n,state){
+  const l=document.getElementById('tl'+n),s=document.getElementById('ts'+n);
+  l.className='t-line '+state;
+  if(state==='active'){s.className='t-status run';s.innerHTML='<span class="spin"></span>'}
+  else if(state==='done'){s.className='t-status ok';s.textContent='✓ OK'}
+  else{s.className='t-status';s.textContent=''}
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-    // Content
-    document.getElementById('summary').textContent = f.professional_summary;
-
-    document.getElementById('skillGaps').innerHTML =
-      (f.skill_gaps || []).map(s => `<span class="tag">${escHtml(s)}</span>`).join('');
-
-    document.getElementById('roles').innerHTML =
-      (f.role_recommendations || []).map(r => `<span class="tag">${escHtml(r)}</span>`).join('');
-
-    document.getElementById('suggestions').innerHTML =
-      (f.improvement_suggestions || []).map(s => `<li>${escHtml(s)}</li>`).join('');
-
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.getElementById('analyzeBtn').disabled = false;
+/* ── ANALYZE ────────────────────────────────────────────────── */
+async function analyze(){
+  if(!selectedFile)return;
+  document.getElementById('results').style.display='none';
+  document.getElementById('agent').style.display='none';
+  document.getElementById('loader').style.display='block';
+  document.getElementById('analyzeBtn').disabled=true;
+  hideErr();
+  [1,2,3].forEach(n=>setStep(n,''));
+  setStep(1,'active');await sleep(300);
+  const fd=new FormData();fd.append('file',selectedFile);
+  let data;
+  try{
+    const fp=fetch('/analyze',{method:'POST',body:fd});
+    await sleep(1100);setStep(1,'done');setStep(2,'active');
+    await sleep(1800);setStep(2,'done');setStep(3,'active');
+    const r=await fp;
+    if(!r.ok){const e=await r.json().catch(()=>({detail:'ANALYSIS FAILED.'}));throw new Error((e.detail||'ANALYSIS FAILED.').toUpperCase())}
+    data=await r.json();
+  }catch(e){
+    document.getElementById('loader').style.display='none';
+    showErr(e.message);document.getElementById('analyzeBtn').disabled=false;return;
   }
+  setStep(3,'done');await sleep(350);
+  document.getElementById('loader').style.display='none';
+  renderResults(data.feedback);
+}
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-  function showError(msg) {
-    document.getElementById('errMsg').textContent = msg;
-    document.getElementById('errorBox').style.display = 'block';
+/* ── RENDER ─────────────────────────────────────────────────── */
+function renderResults(f){
+  const score=f.ats_score;
+  resumeSummary=f.professional_summary||'';
+  let color,tier;
+  if(score>=80){color='#00ff88';tier='EXCELLENT'}
+  else if(score>=65){color='#60a5fa';tier='GOOD'}
+  else if(score>=45){color='#ffb800';tier='FAIR'}
+  else{color='#ff3344';tier='POOR'}
+  const sn=document.getElementById('scoreNum');
+  sn.textContent=score;sn.style.color=color;
+  document.getElementById('scoreTier').textContent=tier;
+  document.getElementById('scoreTier').style.color=color;
+  document.getElementById('scoreFill').style.background=color;
+  setTimeout(()=>{document.getElementById('scoreFill').style.width=score+'%'},100);
+  document.getElementById('summary').textContent=f.professional_summary||'—';
+  document.getElementById('skillGaps').innerHTML=(f.skill_gaps||[]).map(s=>`<span class="tag">${esc(s)}</span>`).join('');
+  document.getElementById('roles').innerHTML=(f.role_recommendations||[]).map(r=>`<span class="tag">${esc(r)}</span>`).join('');
+  document.getElementById('suggestions').innerHTML=(f.improvement_suggestions||[]).map(s=>`<li><span class="sug-arrow">→</span>${esc(s)}</li>`).join('');
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('analyzeBtn').disabled=false;
+  buildAgent(f.role_recommendations||[]);
+}
+
+/* ── AGENT ──────────────────────────────────────────────────── */
+function buildAgent(roles){
+  const c=document.getElementById('roleButtons');c.innerHTML='';
+  roles.slice(0,6).forEach(role=>{
+    const b=document.createElement('button');b.className='role-btn';
+    b.textContent=role.toUpperCase();b.onclick=()=>searchJobs(role,b);c.appendChild(b);
+  });
+  document.getElementById('agent').style.display='block';
+}
+
+async function searchJobs(role,btn){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.role-btn').forEach(b=>b.disabled=true);
+  document.getElementById('jobLoader').style.display='block';
+  document.getElementById('jobResults').innerHTML='';
+  document.getElementById('linkedInBtn').style.display='none';
+  try{
+    const r=await fetch(`/jobs?role=${encodeURIComponent(role)}&count=5`);
+    const data=await r.json();
+    document.getElementById('jobLoader').style.display='none';
+    renderJobs(data.jobs||[],data.is_mock||false,role);
+    if(data.linkedin_url){const li=document.getElementById('linkedInBtn');li.href=data.linkedin_url;li.style.display='inline-block'}
+  }catch(e){
+    document.getElementById('jobLoader').style.display='none';
+    document.getElementById('jobResults').innerHTML='<div style="font-size:.72rem;color:var(--fg3);padding:16px 0;">JOB SEARCH UNAVAILABLE.</div>';
+  }finally{
+    document.querySelectorAll('.role-btn').forEach(b=>b.disabled=false);
   }
-  function hideError() {
-    document.getElementById('errorBox').style.display = 'none';
-  }
-  function reset() {
-    clearFile({ stopPropagation: () => {} });
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('loader').style.display  = 'none';
-    hideError();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+}
+
+function renderJobs(jobs,isMock,keyword){
+  const box=document.getElementById('jobResults');
+  if(!jobs.length){box.innerHTML=`<div style="font-size:.72rem;color:var(--fg3);padding:16px 0">NO RESULTS FOR "${keyword.toUpperCase()}". TRY ANOTHER ROLE.</div>`;return}
+  const mockBadge=isMock?`<div style="font-size:.62rem;color:var(--amber);letter-spacing:.1em;margin-bottom:12px;padding:6px 12px;border:1px solid rgba(255,184,0,.2);background:rgba(255,184,0,.04)">DEMO MODE — SAMPLE LISTINGS (ADD JSEARCH_API_KEY FOR LIVE DATA)</div>`:'';
+  box.innerHTML=mockBadge+jobs.map((j,i)=>`
+<div class="job-card" id="jc${i}">
+  <div class="job-idx">[${String(i+1).padStart(3,'0')}]</div>
+  <div class="job-title">${esc(j.title)}</div>
+  <div class="job-co">${esc(j.company)}</div>
+  <div class="job-meta">${j.location?esc(j.location)+'  &middot;  ':''}${esc(j.job_type||'')}${j.salary?'  &middot;  '+esc(j.salary):''}${j.closing_date?'<br>DEADLINE: '+esc(j.closing_date):''}</div>
+  <div class="job-btns">
+    ${j.url?`<a href="${esc(j.url)}" target="_blank" class="jb-view">VIEW JOB &rarr;</a>`:''}
+    <button class="jb-cl" id="clbtn${i}" onclick="genCL(${i},'${esc(j.title).replace(/'/g,"\\'")}','${esc(j.company).replace(/'/g,"\\'")}')">COVER LETTER</button>
+  </div>
+  <div class="cl-panel" id="clp${i}">
+    <div class="cl-panel-hdr">// COVER_LETTER.GPT-4o &mdash; ${esc(j.title)} @ ${esc(j.company)}</div>
+    <div class="cl-text" id="clt${i}"></div>
+    <div class="cl-actions"><button class="cl-copy" onclick="copyLetter(${i})">COPY TO CLIPBOARD</button></div>
+  </div>
+</div>`).join('');
+}
+
+async function genCL(idx,jobTitle,company){
+  const panel=document.getElementById('clp'+idx),te=document.getElementById('clt'+idx),btn=document.getElementById('clbtn'+idx);
+  panel.style.display='block';te.textContent='GENERATING WITH GPT-4o...';btn.disabled=true;btn.textContent='GENERATING...';
+  try{
+    const r=await fetch('/cover-letter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_title:jobTitle,company:company,resume_summary:resumeSummary})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||'Generation failed.');
+    te.textContent='';let i=0;const ty=setInterval(()=>{te.textContent+=data.cover_letter[i++];if(i>=data.cover_letter.length)clearInterval(ty)},12);
+  }catch(e){te.textContent='ERROR: '+e.message}
+  finally{btn.disabled=false;btn.textContent='COVER LETTER'}
+}
+
+function copyLetter(idx){
+  navigator.clipboard.writeText(document.getElementById('clt'+idx).textContent).then(()=>{
+    const b=document.querySelector(`#clp${idx} .cl-copy`);b.textContent='COPIED ✓';setTimeout(()=>b.textContent='COPY TO CLIPBOARD',2000);
+  });
+}
+
+/* ── UTILS ──────────────────────────────────────────────────── */
+function showErr(msg){document.getElementById('errMsg').textContent=msg;document.getElementById('errorBox').style.display='block'}
+function hideErr(){document.getElementById('errorBox').style.display='none'}
+function reset(){
+  selectedFile=null;resumeSummary='';
+  document.getElementById('fileInput').value='';
+  document.getElementById('fileChosen').style.display='none';
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('results').style.display='none';
+  document.getElementById('agent').style.display='none';
+  document.getElementById('loader').style.display='none';
+  document.getElementById('jobResults').innerHTML='';
+  document.getElementById('roleButtons').innerHTML='';
+  hideErr();window.scrollTo({top:0,behavior:'smooth'});
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
 </body>
 </html>
