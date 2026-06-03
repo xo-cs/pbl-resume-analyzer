@@ -220,7 +220,7 @@ footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text
       life:init?Math.floor(Math.random()*220):0,
       maxLife:200+Math.random()*380,
       vx,vy,
-      size:7+Math.random()*20,
+      size:10+Math.random()*23,
       rot:Math.random()*Math.PI*2,
       rotV:(Math.random()-.5)*.009,
       text:TEXTS[Math.floor(Math.random()*TEXTS.length)],
@@ -312,7 +312,7 @@ footer{margin-top:80px;font-size:.6rem;color:var(--fg3);letter-spacing:.1em;text
       f.life++;f.x+=f.vx;f.y+=f.vy;
       if(f.type!=='text')f.rot+=f.rotV;
       if(f.life>=f.maxLife){fl[i]=mkF(false);return;}
-      const op=Math.sin(f.life/f.maxLife*Math.PI)*.22;
+      const op=Math.sin(f.life/f.maxLife*Math.PI)*.32;
       if(op>.008)drawF(f,op);
     });
 
